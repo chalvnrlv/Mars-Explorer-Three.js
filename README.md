@@ -2,6 +2,13 @@
 
 Mars Explorer is an interactive 3D web-based simulation where users can explore a Martian terrain with an astronaut character. The project leverages Three.js for 3D rendering and FBXLoader for loading 3D models and animations.
 
+## Preview
+
+![image](https://github.com/user-attachments/assets/37d6d7c9-e219-4b61-b23b-53e8125da466)
+![image](https://github.com/user-attachments/assets/8434b035-58ef-41ba-bcde-d0b30799c81a)
+![image](https://github.com/user-attachments/assets/e6a6ae61-d0fc-4a11-b0ff-6604f622615e)
+
+
 ## Features
 
 - Fully interactive 3D Mars terrain.
