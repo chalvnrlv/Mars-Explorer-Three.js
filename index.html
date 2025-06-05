@@ -2,15 +2,20 @@
 <html>
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mars Explorer</title>
     <style>
         * {
             margin: 0;
             padding: 0;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
         }
         
         body {
             overflow: hidden;
+            font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+            background: #121212;
         }
 
         canvas {
@@ -29,20 +34,202 @@
             padding: 20px;
             border-radius: 10px;
             display: none;
+            z-index: 100;
+        }
+
+        /* Mobile Controls */
+        #mobile-controls {
+            position: fixed;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            display: none;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 10;
+            touch-action: none;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .dpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 5px;
+            width: 120px;
+            height: 120px;
+        }
+
+        .dpad-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            transition: all 0.1s;
+            user-select: none;
+        }
+
+        .dpad-btn:active {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(0.95);
+        }
+
+        .dpad-up { grid-area: 1 / 2; }
+        .dpad-left { grid-area: 2 / 1; }
+        .dpad-center { grid-area: 2 / 2; background: transparent; border: none; }
+        .dpad-right { grid-area: 2 / 3; }
+        .dpad-down { grid-area: 3 / 2; }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .action-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 100, 100, 0.3);
+            border: 2px solid rgba(255, 100, 100, 0.6);
+            color: white;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            transition: all 0.1s;
+            user-select: none;
+        }
+
+        .action-btn:active {
+            background: rgba(255, 100, 100, 0.5);
+            transform: scale(0.95);
+        }
+
+        .jump-btn {
+            background: rgba(100, 200, 255, 0.3);
+            border: 2px solid rgba(100, 200, 255, 0.6);
+        }
+
+        .jump-btn:active {
+            background: rgba(100, 200, 255, 0.5);
+        }
+
+        #orientation-warning {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            z-index: 1000;
+            font-size: 24px;
+            flex-direction: column;
+        }
+
+        #orientation-warning p {
+            margin-bottom: 20px;
+            max-width: 80%;
+        }
+
+        @media (max-width: 768px) {
+            #mobile-controls {
+                display: flex;
+            }
+            
+            /* Show warning on mobile in portrait mode */
+            @media (orientation: portrait) {
+                #orientation-warning {
+                    display: flex;
+                }
+            }
+        }
+
+        /* Touch joystick for movement */
+        #touch-joystick {
+            position: fixed;
+            bottom: 150px;
+            left: 50px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            display: none;
+            z-index: 10;
+            touch-action: none;
+        }
+
+        #joystick-handle {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s;
         }
     </style>
 </head>
 <body>
     <div id="loading">Loading...</div>
+    <div id="orientation-warning">
+        <p>🔄 Please rotate your device to landscape mode for the best experience</p>
+        <p>Mars Explorer works best in landscape orientation</p>
+    </div>
+    
+    <div id="mobile-controls">
+        <div class="control-group">
+            <div class="dpad">
+                <div class="dpad-btn dpad-up">↑</div>
+                <div class="dpad-btn dpad-left">←</div>
+                <div class="dpad-center"></div>
+                <div class="dpad-btn dpad-right">→</div>
+                <div class="dpad-btn dpad-down">↓</div>
+            </div>
+            <div style="margin-top: 10px; color: white; font-size: 14px;">Move</div>
+        </div>
+        
+        <div class="action-buttons">
+            <div class="action-btn rotate-btn">↻</div>
+            <div class="action-btn jump-btn">↑</div>
+        </div>
+    </div>
+    
+    <div id="touch-joystick">
+        <div id="joystick-handle"></div>
+    </div>
+    
     <script type="importmap">
         {
             "imports": {
-            "three": "https://unpkg.com/three@0.171.0/build/three.module.js",
-            "three/examples/jsm/controls/OrbitControls": "https://unpkg.com/three@0.171.0/examples/jsm/controls/OrbitControls.js",
-            "three/examples/jsm/loaders/FBXLoader": "https://unpkg.com/three@0.171.0/examples/jsm/loaders/FBXLoader.js",
-            "three/examples/jsm/libs/fflate.module.min": "https://unpkg.com/three@0.171.0/examples/jsm/libs/fflate.module.min.js"
+                "three": "https://unpkg.com/three@0.171.0/build/three.module.js",
+                "three/examples/jsm/controls/OrbitControls": "https://unpkg.com/three@0.171.0/examples/jsm/controls/OrbitControls.js",
+                "three/examples/jsm/loaders/FBXLoader": "https://unpkg.com/three@0.171.0/examples/jsm/loaders/FBXLoader.js",
+                "three/examples/jsm/libs/fflate.module.min": "https://unpkg.com/three@0.171.0/examples/jsm/libs/fflate.module.min.js"
+            }
         }
-    }
     </script>
     <script type="module" src="main.js"></script>
 </body>
