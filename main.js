@@ -9,6 +9,10 @@ let player, marsTerrain;
 let isJumping = false; 
 let velocity = new THREE.Vector3(); 
 
+const PLAYER_SPEED = 0.1;
+const JUMP_FORCE = 0.3;
+const GRAVITY = 0.05;
+
 init();
 animate();
 
@@ -43,7 +47,7 @@ function init() {
   controls.update();
 
   const terrainLoader = new FBXLoader();
-  terrainLoader.load('assets/Mars.fbx', (fbx) => {
+  terrainLoader.load('/assets/Mars.fbx', (fbx) => {
     marsTerrain = fbx;
     marsTerrain.scale.set(0.01, 0.01, 0.01);
     marsTerrain.position.set(0, 0, 0);
@@ -55,10 +59,10 @@ function init() {
     player = fbx;
     mixer = new THREE.AnimationMixer(player);
 
-    loadAnimation('assets/AstroWalking.fbx', 'walk');
-    loadAnimation('assets/AstroJump.fbx', 'jump');
-    loadAnimation('assets/AstroBackwards.fbx', 'backwards');
-    loadAnimation('assets/AstroIdle.fbx', 'idle', true);
+    loadAnimation('/assets/AstroWalking.fbx', 'walk');
+    loadAnimation('/assets/AstroJump.fbx', 'jump');
+    loadAnimation('/assets/AstroBackwards.fbx', 'backwards');
+    loadAnimation('/assets/AstroIdle.fbx', 'idle', true);
 
     player.scale.set(0.002, 0.002, 0.002);
     player.position.set(0, 5, 0);
@@ -173,31 +177,35 @@ function onWindowResize() {
 }
 
 function animate() {
-    requestAnimationFrame(animate);
-  
-    const delta = clock.getDelta();
-    if (mixer) mixer.update(delta);
-  
-    if (player) {
-      const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(player.quaternion);
-      forward.y = 0; 
-      forward.normalize();
-  
-      player.position.add(forward.multiplyScalar(velocity.z));
-  
-      if (marsTerrain) {
-        const raycaster = new THREE.Raycaster(
-          new THREE.Vector3(player.position.x, player.position.y + 5, player.position.z),
-          new THREE.Vector3(0, -1, 0)
-        );
-        const intersects = raycaster.intersectObject(marsTerrain, true);
-        if (intersects.length > 0) {
-          player.position.y = intersects[0].point.y;
-        } else {
-          player.position.y -= delta * 2;
-        }
+  requestAnimationFrame(animate);
+
+  const delta = Math.min(clock.getDelta(), 0.1); // Limit delta for stability
+  if (mixer) mixer.update(delta);
+
+  if (player) {
+    // Apply gravity
+    velocity.y -= GRAVITY * delta * 60;
+
+    // Move player
+    player.position.y += velocity.y;
+    
+    // Collision detection
+    if (marsTerrain) {
+      const raycaster = new THREE.Raycaster(
+        player.position.clone().add(new THREE.Vector3(0, 1, 0)),
+        new THREE.Vector3(0, -1, 0),
+        0,
+        2
+      );
+      
+      const intersects = raycaster.intersectObject(marsTerrain, true);
+      if (intersects.length > 0 && intersects[0].distance < 1.5) {
+        player.position.y = intersects[0].point.y;
+        velocity.y = 0;
+        isJumping = false;
       }
     }
-  
-    renderer.render(scene, camera);
   }
+
+  renderer.render(scene, camera);
+}
