@@ -4,6 +4,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
+    "clean-install": "rm -rf node_modules && rm -f package-lock.json && npm install",
+    "build": "chmod +x node_modules/.bin/vite && vite build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
