@@ -9,6 +9,10 @@ let player, marsTerrain;
 let isJumping = false; 
 let velocity = new THREE.Vector3(); 
 
+// Camera follow variables
+let cameraTargetPosition = new THREE.Vector3();
+let cameraOffset = new THREE.Vector3(0, 5, -10); // Behind and above the player
+let cameraSmoothness = 0.01; // Lower values = smoother camera
 
 init();
 animate();
@@ -180,6 +184,7 @@ function animate() {
     if (mixer) mixer.update(delta);
   
     if (player) {
+      // Update player position and rotation
       const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(player.quaternion);
       forward.y = 0; 
       forward.normalize();
@@ -198,7 +203,33 @@ function animate() {
           player.position.y -= delta * 2;
         }
       }
+      
+      // ====== CAMERA FOLLOW SYSTEM ======
+      if (player) {
+        // Calculate target position behind the player
+        const playerDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(player.quaternion);
+        playerDirection.y = 0;
+        playerDirection.normalize();
+        
+        // Calculate camera position offset behind the player
+        const offset = cameraOffset.clone();
+        offset.applyQuaternion(player.quaternion);
+        
+        // Calculate target position for camera
+        cameraTargetPosition.copy(player.position).add(offset);
+        
+        // Smoothly move camera towards target position
+        camera.position.lerp(cameraTargetPosition, cameraSmoothness);
+        
+        const lookAtTarget = new THREE.Vector3(
+          player.position.x,
+          player.position.y - 1.5,
+          player.position.z
+        );
+        
+        camera.lookAt(lookAtTarget);
+      }
     }
   
     renderer.render(scene, camera);
-  }
+}
